@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Four Innovation</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet"/>
+  <style>
+    * { box-sizing: border-box; font-family: 'Poppins', sans-serif; transition: .2s; }
+    body { margin: 0; background: #f2f2f2; color: #333; }
+    header {
+      background: #004aad; color: white; padding: 1rem 2rem;
+      position: sticky; top: 0; z-index: 100; display: flex;
+      justify-content: space-between; align-items: center; flex-wrap: wrap;
+    }
+    .logo { font-size: 2rem; font-weight: bold; }
+    .header-right { display: flex; align-items: center; gap: 1rem; }
+    .search { padding: .4rem; border: none; width: 200px; border-radius:5px; }
+    .cart { background: white; color: #004aad; border: none; padding: .5rem 1rem; border-radius:20px; cursor: pointer; font-weight: bold; }
+    .slider {
+      width: 100%; overflow: hidden; position: relative;
+      height: 180px; background: #cce5ff;
+    }
+    .slider img {
+      width: 100%; height: 100%; object-fit: cover;
+      position: absolute; top: 0; left: 0;
+      opacity: 0; transition: opacity 1s ease-in-out;
+    }
+    .slider img.active { opacity: 1; z-index: 1; }
+
+    .top-section { padding: 1rem 2rem; background: #e6f0ff; }
+    .offers { display: flex; overflow: hidden; gap: 1rem; }
+    .offer-item {
+      min-width: 200px; background: linear-gradient(to bottom, #d0e1ff, #ffffff);
+      border-radius: 10px; padding: 1rem; text-align: center;
+      position: relative; box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+    .offer-item .discount {
+      position: absolute; top: 8px; right: 8px; background: #ff3c3c;
+      color: white; font-size: 0.75rem; padding: 0.2rem 0.5rem;
+      border-radius: 4px; font-weight: bold;
+    }
+
+    .products, .filters { display: flex; flex-wrap: wrap; gap:1rem; padding:1rem 2rem; }
+    .filters { background: #fff; padding:1rem; border-radius:10px; align-items: center; }
+    .filters select, .filters input { padding: .4rem; border-radius:5px; border:1px solid #ccc; }
+
+    .product {
+      background: white; border-radius:10px; padding:1rem;
+      flex:1 1 180px; text-align:center;
+      box-shadow:0 4px 8px rgba(0,0,0,.1); cursor:pointer;
+    }
+    .product:hover {
+      transform: translateY(-5px);
+      box-shadow:0 8px 16px rgba(0,0,0,.2);
+    }
+    .product .icon { font-size:3rem; margin-bottom:.5rem; }
+    .product button {
+      background:#004aad; border:none;color:white;
+      padding:.5rem 1rem;border-radius:20px;cursor:pointer;
+    }
+    .message {
+      position:fixed; top:10px; left:50%; transform:translateX(-50%);
+      padding:.6rem 1rem; border-radius:5px; color:white; display:none; z-index:200;
+    }
+    .added { background:#28A745; }
+
+    #cartModal {
+      position:fixed; top:0; right:0; width:360px; height:100%;
+      background:white; box-shadow:-4px 0 8px rgba(0,0,0,.2);
+      padding:1rem; display:none; flex-direction:column; z-index:150;
+    }
+    .cart-item { padding:.4rem 0; border-bottom:1px solid #ccc; }
+    .checkout-btn, .generate-btn {
+      background:#28A745;color:white;border:none;
+      padding:.7rem;border-radius:5px;width:100%;
+      cursor:pointer;margin-top:.5rem;
+    }
+    .qr-section img {
+      width:150px; margin:.5rem auto; display:block;
+    }
+    .receipt {
+      background:#f9f9f9;padding:.8rem;border-radius:8px;
+      font-size:14px;overflow-y:auto; max-height:200px; margin-top:.5rem;
+    }
+    footer { text-align:center;padding:1rem;background:#222;color:white;margin-top:2rem;}
+  </style>
+</head>
+<body>
+
+<header>
+  <span class="logo">🎉 Four Innovation</span>
+  <div class="header-right">
+    <input id="searchBar" class="search" placeholder="Buscar..." oninput="applyFilters()"/>
+    <button class="cart" onclick="toggleCart()">🛒 Carrito (<span id="cartCount">0</span>)</button>
+  </div>
+</header>
+
+<div class="slider" id="promoSlider">
+  <img src="https://via.placeholder.com/1200x180?text=🔥+Envío+Gratis+en+Compras+Mayores+a+S/200" class="active">
+  <img src="https://via.placeholder.com/1200x180?text=🎮+Hasta+50%25+DCTO+Gaming">
+  <img src="https://via.placeholder.com/1200x180?text=📱+Smartphones+en+Oferta+Limitada">
+</div>
+
+<section class="top-section">
+  <h2>🔥 OFERTAS DE LA SEMANA</h2>
+  <div class="offers" id="offersList"></div>
+</section>
+
+<section class="filters">
+  <label>Categoría:
+    <select id="catFilter" onchange="applyFilters()">
+      <option value="">Todas</option>
+      <option value="Audio">Audio</option>
+      <option value="Video">Video</option>
+      <option value="Gaming">Gaming</option>
+      <option value="Accesorios">Accesorios</option>
+    </select>
+  </label>
+  <label>Precio hasta (S/):
+    <input id="priceFilter" type="number" placeholder="Max S/..." oninput="applyFilters()">
+  </label>
+</section>
+
+<main class="products" id="productList"></main>
+<div class="message added" id="addedMsg">Producto añadido al carrito ✅</div>
+
+<div id="cartModal">
+  <button class="checkout-btn" style="background:#004aad;" onclick="toggleCart()">⏪ Volver</button>
+  <h2>🛍️ Mi Carrito</h2>
+  <div id="cartItems"></div>
+  <p><strong>Total:</strong> <span id="totalAmount">S/0</span></p>
+  <div>
+    <label>Método de pago:</label>
+    <select id="paymentSelect" onchange="onPaymentChange()">
+      <option value="">--Selecciona--</option>
+      <option value="Débito">💳 Débito</option>
+      <option value="Crédito">💳 Crédito</option>
+      <option value="Yape">📱 Yape</option>
+    </select>
+  </div>
+  <div id="cardForm" style="display:none;margin-top:.5rem;">
+    <input placeholder="Nombre del titular"/><input placeholder="Número tarjeta" maxlength="16"/>
+    <input type="month"/><input placeholder="CVV" maxlength="3"/>
+  </div>
+  <div class="qr-section" id="qrSection" style="display:none;">
+    <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=FourInnovation%20Pago%20Yape"/>
+  </div>
+  <button class="generate-btn" onclick="generateReceipt()">🧾 Generar Boleta</button>
+  <div class="receipt" id="receipt" style="display:none;"></div>
+</div>
+
+<footer>© 2025 Four Innovation | Todos los derechos reservados</footer>
+
+<script>
+const USD_TO_PEN = 3.7;
+const products = [
+  {name:"Auriculares", priceUSD:25, icon:"🎧", cat:"Audio"},
+  {name:"Smartwatch", priceUSD:45, icon:"⌚", cat:"Accesorios"},
+  {name:"Drone", priceUSD:150, icon:"🚁", cat:"Video"},
+  {name:"Laptop Gamer", priceUSD:1200, icon:"💻", cat:"Gaming"},
+  {name:"Smartphone", priceUSD:299, icon:"📱", cat:"Accesorios"},
+  {name:"Tablet", priceUSD:180, icon:"📲", cat:"Video"},
+  {name:"Teclado", priceUSD:85, icon:"⌨️", cat:"Gaming"},
+  {name:"Monitor", priceUSD:320, icon:"🖥️", cat:"Video"},
+  {name:"Mouse", priceUSD:45, icon:"🖱️", cat:"Gaming"},
+  {name:"Cámara", priceUSD:500, icon:"📷", cat:"Video"},
+  {name:"Parlante", priceUSD:75, icon:"🔊", cat:"Audio"},
+  {name:"TV 4K", priceUSD:950, icon:"📺", cat:"Video"},
+  {name:"USB", priceUSD:20, icon:"💾", cat:"Accesorios"},
+  {name:"Cargador", priceUSD:30, icon:"🔌", cat:"Accesorios"},
+  {name:"Silla Gamer", priceUSD:210, icon:"🪑", cat:"Gaming"},
+  {name:"Router", priceUSD:99, icon:"📡", cat:"Accesorios"},
+  {name:"Cooler PC", priceUSD:55, icon:"🧊", cat:"Gaming"},
+  {name:"Micrófono", priceUSD:120, icon:"🎙️", cat:"Audio"},
+  {name:"Consola", priceUSD:350, icon:"🎮", cat:"Gaming"},
+  {name:"Webcam", priceUSD:60, icon:"🎥", cat:"Video"}
+];
+products.forEach(p=> p.price = Math.round(p.priceUSD * USD_TO_PEN));
+const offers = [products[2], products[3], products[11], products[18]];
+let filtered = [...products];
+const cart = [];
+
+function renderOffers(){
+  const el = document.getElementById('offersList');
+  el.innerHTML = "";
+  offers.forEach(p=>{
+    el.innerHTML += `
+      <div class="offer-item">
+        <div class="discount">45% DCTO</div>
+        <div class="icon">${p.icon}</div>
+        <h4>${p.name}</h4>
+        <p><strong>S/${p.price}</strong></p>
+      </div>`;
+  });
+  let idx=0;
+  setInterval(()=>{
+    el.scrollTo({left: idx*220, behavior:"smooth"});
+    idx = (idx+1)%offers.length;
+  },3000);
+}
+
+function renderSlider(){
+  const slides = document.querySelectorAll('.slider img');
+  let i = 0;
+  setInterval(() => {
+    slides.forEach(s => s.classList.remove('active'));
+    slides[i].classList.add('active');
+    i = (i + 1) % slides.length;
+  }, 4000);
+}
+
+function renderProducts(){
+  const list = document.getElementById('productList');
+  list.innerHTML = "";
+  filtered.forEach((p,i)=>{
+    list.innerHTML += `<div class="product"><div class="icon">${p.icon}</div><h3>${p.name}</h3><p><strong>S/${p.price}</strong></p><button onclick="addToCart(${i})">Añadir</button></div>`;
+  });
+}
+
+function applyFilters(){
+  const q = document.getElementById('searchBar').value.toLowerCase();
+  const cat = document.getElementById('catFilter').value;
+  const pmax = parseFloat(document.getElementById('priceFilter').value)||Infinity;
+  filtered = products.filter(p =>
+    p.name.toLowerCase().includes(q) &&
+    (cat===""||p.cat===cat) &&
+    p.price<=pmax
+  );
+  renderProducts();
+}
+
+function toggleCart(){
+  const m = document.getElementById('cartModal');
+  m.style.display = m.style.display==='flex'?'none':'flex';
+  updateCart();
+}
+
+function addToCart(i){
+  const prod = filtered[i];
+  cart.push(prod);
+  document.getElementById('cartCount').textContent = cart.length;
+  const msg = document.getElementById('addedMsg');
+  msg.style.display='block';
+  setTimeout(()=>msg.style.display='none',1500);
+}
+
+function updateCart(){
+  const ci = document.getElementById('cartItems');
+  ci.innerHTML=""; let total=0;
+  cart.forEach(item=>{ total+=item.price;
+    ci.innerHTML+=`<div class="cart-item">${item.icon} ${item.name} - S/${item.price}</div>`;
+  });
+  document.getElementById('totalAmount').textContent = `S/${total}`;
+}
+
+function onPaymentChange(){
+  const v = document.getElementById('paymentSelect').value;
+  document.getElementById('cardForm').style.display = (v!=='Yape')?'block':'none';
+  document.getElementById('qrSection').style.display = (v==='Yape')?'block':'none';
+}
+
+function generateReceipt(){
+  const pay = document.getElementById('paymentSelect').value;
+  if(!pay){ alert('Selecciona método de pago'); return; }
+  if(cart.length===0){ alert('Tu carrito está vacío'); return; }
+  let total = cart.reduce((s,i)=>s+i.price,0);
+  let html = `<strong>🧾 Boleta Four Innovation</strong><br><strong>Método:</strong> ${pay}<br><ul>`;
+  cart.forEach(it=> html+=`<li>${it.icon} ${it.name} – S/${it.price}</li>`);
+  html+=`</ul><strong>Total: S/${total}</strong>`;
+  document.getElementById('receipt').innerHTML = html;
+  document.getElementById('receipt').style.display = 'block';
+}
+
+renderSlider();
+renderOffers();
+applyFilters();
+</script>
+</body>
+</html>
